@@ -1,0 +1,15 @@
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Environments & Secrets
+.env
+.venv/
+env/
+
+# Database
+db.sqlite3
+
+# OS Files
+.DS_Store
+Thumbs.db
