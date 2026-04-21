@@ -18,3 +18,9 @@ db.sqlite3
 # OS Files
 .DS_Store
 Thumbs.db
+
+# TU API Testing
+api_test.py
+
+# Media files
+media/
