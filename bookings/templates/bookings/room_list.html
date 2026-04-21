@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}รายการห้องประชุม — ระบบจองห้องประชุม{% endblock %}
+
+{% block content %}
+<div class="room-list-container">
+    <div class="page-header">
+        <h1><i class="fas fa-door-open"></i> รายการห้องประชุม</h1>
+        <p>เลือกห้องที่ต้องการจองเพื่อดูรายละเอียดและตารางเวลา</p>
+    </div>
+
+    <div class="room-grid">
+        {% for room in rooms %}
+        <div class="room-card">
+            <div class="room-image">
+                {% if room.image %}
+                    <img src="{{ room.image.url }}" alt="{{ room.name }}">
+                {% else %}
+                    <div class="room-placeholder">
+                        <i class="fas fa-building"></i>
+                    </div>
+                {% endif %}
+                <div class="room-capacity">
+                    <i class="fas fa-users"></i> {{ room.capacity }} ที่นั่ง
+                </div>
+            </div>
+            <div class="room-details">
+                <h3>{{ room.name }}</h3>
+                <p class="room-location"><i class="fas fa-map-marker-alt"></i> {{ room.location }}</p>
+                <p class="room-description">{{ room.description|truncatewords:20 }}</p>
+                <div class="room-actions">
+                    <a href="{% url 'bookings:book_room' room.id %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> จองห้องนี้
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-info-circle"></i>
+            <p>ไม่พบข้อมูลห้องประชุมในขณะนี้</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.room-list-container {
+    padding: 20px 0;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    font-size: 28px;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-header p {
+    color: #666;
+    margin-top: 5px;
+}
+
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.room-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.room-image {
+    height: 200px;
+    position: relative;
+    background: #f0f0f0;
+}
+
+.room-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.room-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    color: #ccc;
+}
+
+.room-capacity {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.room-details {
+    padding: 20px;
+}
+
+.room-details h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: #1a1a2e;
+}
+
+.room-location {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.room-description {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.room-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px;
+    background: white;
+    border-radius: 16px;
+    color: #888;
+}
+
+.empty-state i {
+    font-size: 40px;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %}

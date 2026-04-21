@@ -1,1 +1,77 @@
-<!-- accounts/login.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ — ระบบจองห้องประชุม</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo / Header -->
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <h1>ระบบจองห้องประชุม</h1>
+                <p>ภาควิชาวิศวกรรมไฟฟ้าและคอมพิวเตอร์</p>
+                <p class="login-subtitle">เข้าสู่ระบบด้วย TU Account</p>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="login-messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="POST" action="{% url 'accounts:login' %}" class="login-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="tu_id">
+                        <i class="fas fa-user"></i> Username
+                    </label>
+                    <input
+                        type="text"
+                        id="tu_id"
+                        name="tu_id"
+                        placeholder="เช่น 6610685xxx"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="รหัสผ่าน TU Account"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-login">
+                    <i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p><i class="fas fa-shield-alt"></i> ยืนยันตัวตนผ่าน TU REST API</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

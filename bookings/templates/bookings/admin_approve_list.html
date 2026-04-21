@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}อนุมัติการจอง — ระบบจองห้องประชุม{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="page-header">
+        <h1><i class="fas fa-check-circle"></i> รายการรออนุมัติ</h1>
+        <p>ตรวจสอบและจัดการคำขอจองห้องประชุมจากนักศึกษาและอาจารย์</p>
+    </div>
+
+    <div class="bookings-table-container">
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th>ผู้จอง</th>
+                    <th>ห้อง</th>
+                    <th>วันเวลาที่จอง</th>
+                    <th>วัตถุประสงค์</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>
+                        <strong>{{ booking.user.first_name }} {{ booking.user.last_name }}</strong>
+                        <span class="user-id">TU ID: {{ booking.user.tu_id }}</span>
+                        <span class="user-role">{{ booking.user.get_role_display }}</span>
+                    </td>
+                    <td class="td-room">
+                        <strong>{{ booking.room.name }}</strong>
+                        <span class="room-loc">{{ booking.room.location }}</span>
+                    </td>
+                    <td>
+                        <div class="booking-time">
+                            <span><i class="far fa-calendar"></i> {{ booking.start_time|date:"d M Y" }}</span>
+                            <span class="time-range">{{ booking.start_time|date:"H:i" }} - {{ booking.end_time|date:"H:i" }}</span>
+                        </div>
+                    </td>
+                    <td>{{ booking.purpose }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'bookings:approve_booking' booking.id 'approve' %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i> อนุมัติ
+                            </a>
+                            <a href="{% url 'bookings:approve_booking' booking.id 'reject' %}" class="btn btn-danger btn-sm">
+                                <i class="fas fa-times"></i> ปฏิเสธ
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="empty-row">
+                        <i class="fas fa-check-double"></i>
+                        <p>ไม่มีรายการจองที่รอการอนุมัติในขณะนี้</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    padding: 20px 0;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    font-size: 28px;
+    color: #1a1a2e;
+}
+
+.user-id, .user-role {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+/* Reusing table styles from my_bookings.html or style.css */
+.bookings-table-container {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.bookings-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bookings-table th {
+    background: #f8fafc;
+    padding: 18px 20px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.bookings-table td {
+    padding: 20px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #1e293b;
+    vertical-align: top;
+}
+
+.td-room strong {
+    display: block;
+    font-size: 16px;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.room-loc {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.booking-time span {
+    display: block;
+}
+
+.time-range {
+    font-weight: 600;
+    color: #3b82f6;
+    margin-top: 4px;
+}
+
+.empty-row {
+    text-align: center;
+    padding: 80px 20px !important;
+    color: #94a3b8;
+}
+
+.empty-row i {
+    font-size: 40px;
+    margin-bottom: 15px;
+    display: block;
+}
+</style>
+{% endblock %}

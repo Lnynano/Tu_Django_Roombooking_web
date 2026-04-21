@@ -1,1 +1,108 @@
-<!-- accounts/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — ระบบจองห้องประชุม{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <h1>สวัสดี, {{ user.first_name }} {{ user.last_name }}</h1>
+        <p class="welcome-role">
+            {% if user.role == 'Admin' %}
+                <span class="badge badge-admin"><i class="fas fa-crown"></i> ผู้ดูแลระบบ</span>
+            {% elif user.role == 'Lecturer' %}
+                <span class="badge badge-lecturer"><i class="fas fa-chalkboard-teacher"></i> อาจารย์</span>
+            {% else %}
+                <span class="badge badge-student"><i class="fas fa-user-graduate"></i> นักศึกษา</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #3b82f6;">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ my_bookings_count }}</h3>
+                <p>การจองของฉัน</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #f59e0b;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ pending_count }}</h3>
+                <p>รออนุมัติ</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #10b981;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ approved_count }}</h3>
+                <p>อนุมัติแล้ว</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #8b5cf6;">
+                <i class="fas fa-door-open"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ rooms_count }}</h3>
+                <p>ห้องทั้งหมด</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h2><i class="fas fa-bolt"></i> เมนูด่วน</h2>
+        <div class="action-grid">
+            <a href="{% url 'bookings:room_list' %}" class="action-card">
+                <i class="fas fa-calendar-plus"></i>
+                <span>จองห้อง</span>
+            </a>
+            <a href="#" class="action-card">
+                <i class="fas fa-calendar-alt"></i>
+                <span>ดูปฏิทิน</span>
+            </a>
+            <a href="{% url 'bookings:my_bookings' %}" class="action-card">
+                <i class="fas fa-list-alt"></i>
+                <span>รายการจองของฉัน</span>
+            </a>
+            {% if user.role == 'Admin' %}
+            <a href="{% url 'bookings:admin_approve_list' %}" class="action-card action-admin">
+                <i class="fas fa-tasks"></i>
+                <span>อนุมัติการจอง</span>
+            </a>
+            <a href="#" class="action-card action-admin">
+                <i class="fas fa-chart-line"></i>
+                <span>ดูรายงาน</span>
+            </a>
+            <a href="#" class="action-card action-admin">
+                <i class="fas fa-cog"></i>
+                <span>จัดการห้อง</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- User Info -->
+    <div class="user-detail-card">
+        <h2><i class="fas fa-id-card"></i> ข้อมูลผู้ใช้</h2>
+        <table class="info-table">
+            <tr><td>TU ID</td><td>{{ user.tu_id }}</td></tr>
+            <tr><td>ชื่อ-นามสกุล</td><td>{{ user.first_name }} {{ user.last_name }}</td></tr>
+            <tr><td>อีเมล</td><td>{{ user.email }}</td></tr>
+            <tr><td>สิทธิ์</td><td>{{ user.get_role_display }}</td></tr>
+        </table>
+    </div>
+</div>
+{% endblock %}

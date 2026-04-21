@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}จองห้อง {{ room.name }} — ระบบจองห้องประชุม{% endblock %}
+
+{% block content %}
+<div class="booking-form-container">
+    <div class="back-link">
+        <a href="{% url 'bookings:room_list' %}"><i class="fas fa-arrow-left"></i> กลับไปหน้ารายการห้อง</a>
+    </div>
+
+    <div class="booking-grid">
+        <!-- Room Info Summary -->
+        <div class="room-summary-card">
+            {% if room.image %}
+                <img src="{{ room.image.url }}" alt="{{ room.name }}" class="summary-image">
+            {% else %}
+                <div class="summary-placeholder">
+                    <i class="fas fa-building"></i>
+                </div>
+            {% endif %}
+            <div class="summary-details">
+                <h2>{{ room.name }}</h2>
+                <p><i class="fas fa-map-marker-alt"></i> {{ room.location }}</p>
+                <p><i class="fas fa-users"></i> ความจุ {{ room.capacity }} ที่นั่ง</p>
+                <hr>
+                <p class="summary-desc">{{ room.description }}</p>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="booking-card">
+            <h2><i class="fas fa-calendar-check"></i> ข้อมูลการจอง</h2>
+            <form method="POST" class="form-container">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="{{ form.start_time.id_for_label }}">
+                        <i class="fas fa-clock"></i> เวลาเริ่มต้น
+                    </label>
+                    {{ form.start_time }}
+                    {% if form.start_time.errors %}
+                        <span class="field-error">{{ form.start_time.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.end_time.id_for_label }}">
+                        <i class="fas fa-clock"></i> เวลาสิ้นสุด
+                    </label>
+                    {{ form.end_time }}
+                    {% if form.end_time.errors %}
+                        <span class="field-error">{{ form.end_time.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.purpose.id_for_label }}">
+                        <i class="fas fa-pen"></i> วัตถุประสงค์การใช้
+                    </label>
+                    {{ form.purpose }}
+                    {% if form.purpose.errors %}
+                        <span class="field-error">{{ form.purpose.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-paper-plane"></i> ยืนยันการจอง
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.booking-form-container {
+    padding: 20px 0;
+}
+
+.back-link {
+    margin-bottom: 20px;
+}
+
+.back-link a {
+    color: #3b82f6;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.booking-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+}
+
+.room-summary-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+}
+
+.summary-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.summary-placeholder {
+    width: 100%;
+    height: 200px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    color: #ccc;
+}
+
+.summary-details {
+    padding: 25px;
+}
+
+.summary-details h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: #1a1a2e;
+}
+
+.summary-details p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-details hr {
+    margin: 20px 0;
+    border: none;
+    border-top: 1px solid #eee;
+}
+
+.summary-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #777 !important;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 16px;
+    padding: 35px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.booking-card h2 {
+    font-size: 20px;
+    margin-bottom: 25px;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+.btn-block {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    font-size: 16px;
+}
+
+@media (max-width: 992px) {
+    .booking-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

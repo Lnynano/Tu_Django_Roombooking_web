@@ -35,7 +35,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=255, unique=True)
-    role = models.CharField(max_length=20, default="Student")
+    ROLE_CHOICES = [
+        ('Student', 'นักศึกษา'),
+        ('Lecturer', 'อาจารย์'),
+        ('Admin', 'ผู้ดูแลระบบ'),
+    ]
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Student')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False) 
 
