@@ -128,7 +128,7 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = "6610685262@student.tu.ac.th"
-EMAIL_HOST_PASSWORD = "ifsu rmau amwm hoaz"
+EMAIL_HOST_USER = "polthagorn@gmail.com"
+EMAIL_HOST_PASSWORD = "stga jhem luyv kgau"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
