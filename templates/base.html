@@ -15,7 +15,7 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-brand">
-            <i class="fas fa-building"></i>
+            <img src="{% static 'Logo_images/TSE_LOGO.webp' %}" alt="TSE Logo" style="height: 45px; margin-right: 12px; filter: drop-shadow(1px 1px 0 white) drop-shadow(-1px -1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white);">
             <span>ระบบจองห้อง </span>
         </div>
         <div class="navbar-menu">
@@ -38,8 +38,11 @@
             <a href="#" class="nav-link">
                 <i class="fas fa-chart-bar"></i> รายงาน
             </a>
-            <a href="#" class="nav-link">
+            <a href="{% url 'bookings:manage_rooms' %}" class="nav-link">
                 <i class="fas fa-door-open"></i> จัดการห้อง
+            </a>
+            <a href="{% url 'send_email_page' %}" class="nav-link">
+                <i class="fas fa-envelope"></i> ส่งอีเมล
             </a>
             {% endif %}
         </div>

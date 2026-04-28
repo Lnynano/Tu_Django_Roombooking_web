@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Room, Booking
-from .forms import BookingForm
+from .forms import BookingForm, RoomForm
 
 @login_required
 def room_list(request):
@@ -60,4 +60,60 @@ def approve_booking(request, booking_id, action):
         messages.warning(request, f'ปฏิเสธการจองห้อง {booking.room.name} แล้ว')
     
     booking.save()
+    booking.save()
     return redirect('bookings:admin_approve_list')
+
+@admin_required
+def manage_rooms(request):
+    """หน้าจัดการห้องประชุม (Admin)"""
+    rooms = Room.objects.all().order_by('-id')
+    return render(request, 'bookings/manage_rooms.html', {'rooms': rooms})
+
+@admin_required
+def add_room(request):
+    """หน้าเพิ่มห้องประชุมใหม่ (Admin)"""
+    if request.method == 'POST':
+        form = RoomForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'เพิ่มห้องประชุมใหม่เรียบร้อยแล้ว')
+            return redirect('bookings:manage_rooms')
+    else:
+        form = RoomForm()
+    
+    return render(request, 'bookings/room_form.html', {
+        'form': form,
+        'action': 'เพิ่มห้องประชุม'
+    })
+
+@admin_required
+def edit_room(request, room_id):
+    """หน้าแก้ไขห้องประชุม (Admin)"""
+    room = get_object_or_404(Room, id=room_id)
+    if request.method == 'POST':
+        form = RoomForm(request.POST, request.FILES, instance=room)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'อัปเดตข้อมูลห้อง {room.name} เรียบร้อยแล้ว')
+            return redirect('bookings:manage_rooms')
+    else:
+        form = RoomForm(instance=room)
+    
+    return render(request, 'bookings/room_form.html', {
+        'form': form,
+        'action': 'แก้ไขห้องประชุม',
+        'room': room
+    })
+
+@admin_required
+def delete_room(request, room_id):
+    """ลบห้องประชุม (Admin)"""
+    room = get_object_or_404(Room, id=room_id)
+    # We could do soft delete: room.is_active = False
+    # Or hard delete: room.delete()
+    # Let's do hard delete for now or soft delete based on standard. I'll do hard delete, 
+    # but maybe soft delete is safer if there are existing bookings.
+    room.is_active = False
+    room.save()
+    messages.success(request, f'ระงับการใช้งานห้อง {room.name} เรียบร้อยแล้ว')
+    return redirect('bookings:manage_rooms')

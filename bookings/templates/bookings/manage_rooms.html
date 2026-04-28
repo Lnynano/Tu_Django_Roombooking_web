@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}จัดการห้องประชุม — ระบบจองห้องประชุม{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h1><i class="fas fa-door-open"></i> จัดการห้องประชุม</h1>
+            <p>เพิ่ม แก้ไข หรือลบห้องประชุมในระบบ</p>
+        </div>
+        <a href="{% url 'bookings:add_room' %}" class="btn btn-primary" style="padding: 10px 20px;">
+            <i class="fas fa-plus"></i> เพิ่มห้องใหม่
+        </a>
+    </div>
+
+    <div class="bookings-table-container">
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th>รูปภาพ</th>
+                    <th>ชื่อห้อง / รหัส</th>
+                    <th>สถานที่</th>
+                    <th>ความจุ</th>
+                    <th>ประเภท</th>
+                    <th>สถานะ</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                <tr class="{% if not room.is_active %}inactive-row{% endif %}">
+                    <td style="width: 120px;">
+                        {% if room.image %}
+                            <img src="{{ room.image.url }}" alt="{{ room.name }}" style="width: 100px; height: 70px; object-fit: cover; border-radius: 8px;">
+                        {% else %}
+                            <div style="width: 100px; height: 70px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                                <i class="fas fa-image fa-2x"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ room.name }}</strong>
+                        {% if room.room_code %}<span class="room-code" style="display: block; font-size: 12px; color: #64748b;">รหัส: {{ room.room_code }}</span>{% endif %}
+                    </td>
+                    <td>{{ room.location }}</td>
+                    <td>{{ room.capacity }} คน</td>
+                    <td>{{ room.get_room_type_display }}</td>
+                    <td>
+                        {% if room.is_active %}
+                            <span style="color: #10b981; font-weight: 500; font-size: 13px;"><i class="fas fa-circle" style="font-size: 10px;"></i> เปิดใช้งาน</span>
+                        {% else %}
+                            <span style="color: #ef4444; font-weight: 500; font-size: 13px;"><i class="fas fa-circle" style="font-size: 10px;"></i> ระงับการใช้งาน</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'bookings:edit_room' room.id %}" class="btn btn-sm" style="background: #f59e0b; color: white;">
+                                <i class="fas fa-edit"></i> แก้ไข
+                            </a>
+                            <a href="{% url 'bookings:delete_room' room.id %}" class="btn btn-danger btn-sm" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการระงับการใช้งานห้องนี้?');">
+                                <i class="fas fa-trash"></i> ลบ
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-row" style="text-align: center; padding: 80px 20px; color: #94a3b8;">
+                        <i class="fas fa-door-closed" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+                        <p>ยังไม่มีห้องประชุมในระบบ</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    padding: 20px 0;
+}
+
+.page-header h1 {
+    font-size: 28px;
+    color: #1a1a2e;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.bookings-table-container {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.bookings-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bookings-table th {
+    background: #f8fafc;
+    padding: 18px 20px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.bookings-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #1e293b;
+    vertical-align: middle;
+}
+
+.inactive-row td {
+    opacity: 0.6;
+    background: #fafafa;
+}
+
+.bookings-table td strong {
+    font-size: 16px;
+    color: #1a1a2e;
+}
+</style>
+{% endblock %}
