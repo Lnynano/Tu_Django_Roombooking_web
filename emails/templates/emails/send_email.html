@@ -1,35 +1,125 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Send Email</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <h1>Send Message to Email</h1>
+{% block title %}ส่งอีเมล — ระบบจองห้องประชุม{% endblock %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endif %}
+{% block content %}
+<div class="email-form-container">
+    <div class="email-card">
+        <div class="email-header">
+            <div class="email-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <h2>ส่งอีเมลติดต่อ</h2>
+            <p class="email-subtitle">กรุณากรอกข้อมูลเพื่อส่งอีเมล</p>
+        </div>
 
-    <form method="POST">
-        {% csrf_token %}
+        <form method="POST" class="form-container">
+            {% csrf_token %}
 
-        <label>Email:</label><br>
-        <input type="email" name="email" placeholder="receiver@example.com" required>
-        <br><br>
+            <div class="form-group">
+                <label for="email">
+                    <i class="fas fa-envelope"></i> อีเมลผู้รับ
+                </label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="receiver@example.com" required>
+            </div>
 
-        <label>Subject:</label><br>
-        <input type="text" name="subject" placeholder="Email subject" required>
-        <br><br>
+            <div class="form-group">
+                <label for="subject">
+                    <i class="fas fa-heading"></i> หัวข้อ
+                </label>
+                <input type="text" id="subject" name="subject" class="form-input" placeholder="หัวข้ออีเมล" required>
+            </div>
 
-        <label>Message:</label><br>
-        <textarea name="message" rows="8" cols="40" placeholder="Type your message here..." required></textarea>
-        <br><br>
+            <div class="form-group">
+                <label for="message">
+                    <i class="fas fa-comment-alt"></i> ข้อความ
+                </label>
+                <textarea id="message" name="message" class="form-input" rows="6" placeholder="พิมพ์ข้อความของคุณที่นี่..." required></textarea>
+            </div>
 
-        <button type="submit">Send Email</button>
-    </form>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-paper-plane"></i> ส่งอีเมล
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-</body>
-</html>
+<style>
+.email-form-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.email-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 600px;
+}
+
+.email-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.email-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: 0 auto 15px;
+}
+
+.email-header h2 {
+    font-size: 24px;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.email-subtitle {
+    color: #666;
+    font-size: 15px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+textarea.form-input {
+    resize: vertical;
+}
+
+.btn-block {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+</style>
+{% endblock %}
