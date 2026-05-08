@@ -1,1 +1,358 @@
-<!-- reports/statistics.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}สถิติการจองห้อง{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .stats-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .stats-title {
+        font-size: 2rem;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    .export-btn {
+        background-color: #27ae60;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .export-btn:hover {
+        background-color: #219a52;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+    }
+    .filters-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        align-items: flex-end;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .filter-group label {
+        font-weight: 500;
+        color: #34495e;
+    }
+    .filter-group select, .filter-group input {
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        min-width: 200px;
+        font-family: inherit;
+    }
+    .filter-btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .filter-btn:hover {
+        background-color: #2980b9;
+    }
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    .chart-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .chart-card h3 {
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+        font-size: 1.25rem;
+        text-align: center;
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+        width: 100%;
+    }
+    .table-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin-top: 3rem;
+        overflow-x: auto;
+    }
+    .reservations-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    .reservations-table th, .reservations-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #ecf0f1;
+    }
+    .reservations-table th {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    .reservations-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .status-Pending { background-color: #f39c12; color: white; }
+    .status-Approved { background-color: #2ecc71; color: white; }
+    .status-Rejected { background-color: #e74c3c; color: white; }
+    .status-Cancelled { background-color: #95a5a6; color: white; }
+    @media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <div class="stats-header">
+        <h1 class="stats-title">สถิติการจองห้อง (ทุกคำขอ)</h1>
+        <a href="{% url 'reports:export_csv' %}" class="export-btn">
+            <i class="fas fa-file-csv"></i> Export รายการจอง (CSV)
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" class="filters-section">
+        <div class="filter-group">
+            <label for="filter_year">เลือกปี (ดูรายเดือน)</label>
+            <input type="number" name="filter_year" id="filter_year" value="{{ filter_year|default:'' }}" min="2000" max="2100" placeholder="เช่น 2024">
+        </div>
+        <div class="filter-group">
+            <label for="filter_month">เลือกเดือน (ดูรายวัน)</label>
+            <input type="month" name="filter_month" id="filter_month" value="{{ filter_month|default:'' }}">
+        </div>
+        <div class="filter-group">
+            <label for="filter_date">เลือกวันที่ (ดูรายห้อง)</label>
+            <input type="date" name="filter_date" id="filter_date" value="{{ filter_date|default:'' }}">
+        </div>
+        
+        <button type="submit" class="filter-btn">
+            <i class="fas fa-filter"></i> กรองข้อมูลสถิติ
+        </button>
+        <a href="{% url 'reports:statistics' %}" class="filter-btn" style="background-color: #95a5a6; text-decoration: none; display: inline-block; text-align: center;">ล้างค่า</a>
+    </form>
+
+    <div class="charts-grid">
+        <!-- Yearly Chart -->
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <h3>ภาพรวมจำนวนการจองรายปี</h3>
+            <div class="chart-container" style="height: 400px;">
+                <canvas id="yearlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Monthly Chart (if year selected) -->
+        {% if filter_year %}
+        <div class="chart-card">
+            <h3>สถิติการจองรายเดือน ในปี {{ filter_year }}</h3>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Daily Chart (if month selected) -->
+        {% if filter_month %}
+        <div class="chart-card">
+            <h3>สถิติการจองรายวัน ในเดือน {{ filter_month }}</h3>
+            <div class="chart-container">
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Specific Date Room Chart (if date selected) -->
+        {% if filter_date %}
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <h3>สถิติการใช้ห้องในวันที่ {{ filter_date }}</h3>
+            <div class="chart-container">
+                <canvas id="specificDateRoomChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Reservations Table -->
+    <div class="table-section">
+        <h3>รายการจองทั้งหมด</h3>
+        <table class="reservations-table">
+            <thead>
+                <tr>
+                    <th>ผู้จอง</th>
+                    <th>ห้อง</th>
+                    <th>เริ่ม</th>
+                    <th>สิ้นสุด</th>
+                    <th>วัตถุประสงค์</th>
+                    <th>สถานะ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in all_reservations %}
+                <tr>
+                    <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
+                    <td>{{ booking.room.name }}</td>
+                    <td>{{ booking.start_time|date:"d/m/Y H:i" }}</td>
+                    <td>{{ booking.end_time|date:"d/m/Y H:i" }}</td>
+                    <td>{{ booking.get_objective_type_display }}</td>
+                    <td><span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #7f8c8d;">ไม่มีข้อมูลการจอง</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const primaryColor = 'rgba(52, 152, 219, 0.7)';
+        const primaryBorder = 'rgba(41, 128, 185, 1)';
+        const secondaryColor = 'rgba(46, 204, 113, 0.7)';
+        const secondaryBorder = 'rgba(39, 174, 96, 1)';
+        const tertiaryColor = 'rgba(155, 89, 182, 0.7)';
+        const tertiaryBorder = 'rgba(142, 68, 173, 1)';
+        const quaternaryColor = 'rgba(231, 76, 60, 0.7)';
+        const quaternaryBorder = 'rgba(192, 57, 43, 1)';
+
+        // 1. Yearly Chart
+        const yearlyData = {{ yearly_stats|safe }};
+        const yearlyLabels = yearlyData.map(item => item.year);
+        const yearlyCounts = yearlyData.map(item => item.total);
+
+        new Chart(document.getElementById('yearlyChart'), {
+            type: 'bar',
+            data: {
+                labels: yearlyLabels,
+                datasets: [{
+                    label: 'จำนวนการจองรวม (ครั้ง)',
+                    data: yearlyCounts,
+                    backgroundColor: primaryColor,
+                    borderColor: primaryBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+
+        // 2. Monthly Chart
+        {% if filter_year %}
+        const monthlyData = {{ monthly_stats|safe }};
+        const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        const monthlyLabels = monthlyData.map(item => thaiMonths[parseInt(item.month) - 1]);
+        const monthlyCounts = monthlyData.map(item => item.total);
+
+        new Chart(document.getElementById('monthlyChart'), {
+            type: 'bar',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'จำนวนการจอง (ครั้ง)',
+                    data: monthlyCounts,
+                    backgroundColor: secondaryColor,
+                    borderColor: secondaryBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+        {% endif %}
+
+        // 3. Daily Chart
+        {% if filter_month %}
+        const dailyData = {{ daily_stats|safe }};
+        const dailyLabels = dailyData.map(item => item.day);
+        const dailyCounts = dailyData.map(item => item.total);
+
+        new Chart(document.getElementById('dailyChart'), {
+            type: 'bar',
+            data: {
+                labels: dailyLabels,
+                datasets: [{
+                    label: 'จำนวนการจอง (ครั้ง)',
+                    data: dailyCounts,
+                    backgroundColor: tertiaryColor,
+                    borderColor: tertiaryBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+        {% endif %}
+
+        // 4. Specific Date Room Chart
+        {% if filter_date %}
+        const specificDateRoomData = {{ specific_date_room_stats|safe }};
+        const sdRoomLabels = specificDateRoomData.map(item => item.room);
+        const sdRoomCounts = specificDateRoomData.map(item => item.total);
+
+        new Chart(document.getElementById('specificDateRoomChart'), {
+            type: 'bar',
+            data: {
+                labels: sdRoomLabels,
+                datasets: [{
+                    label: 'จำนวนรอบการจอง (ครั้ง)',
+                    data: sdRoomCounts,
+                    backgroundColor: quaternaryColor,
+                    borderColor: quaternaryBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

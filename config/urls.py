@@ -23,6 +23,7 @@ urlpatterns = [
     path("", include("accounts.urls")),
     path("bookings/", include("bookings.urls")),
     path("email/", include("emails.urls")),
+    path("reports/", include("reports.urls")),
 ]
 
 from django.conf import settings
