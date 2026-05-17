@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 
 # Environments & Secrets
+.claude/
 .env
 .venv/
 env/
@@ -23,3 +24,6 @@ Thumbs.db
 api_test.py
 
 # Media files
+
+#Markdown
+CLAUDE.md
