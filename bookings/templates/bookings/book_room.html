@@ -12,11 +12,11 @@
         <!-- Room Info Summary -->
         <div class="room-summary-card">
             {% if room.image %}
-                <img src="{{ room.image.url }}" alt="{{ room.name }}" class="summary-image">
+            <img src="{{ room.image.url }}" alt="{{ room.name }}" class="summary-image">
             {% else %}
-                <div class="summary-placeholder">
-                    <i class="fas fa-building"></i>
-                </div>
+            <div class="summary-placeholder">
+                <i class="fas fa-building"></i>
+            </div>
             {% endif %}
             <div class="summary-details">
                 <h2>{{ room.name }}</h2>
@@ -32,42 +32,147 @@
             <h2><i class="fas fa-calendar-check"></i> ข้อมูลการจอง</h2>
             <form method="POST" class="form-container">
                 {% csrf_token %}
-                
+
                 {% if form.non_field_errors %}
                 <div class="alert alert-error">
                     {% for error in form.non_field_errors %}
-                        {{ error }}
+                    {{ error }}
                     {% endfor %}
                 </div>
                 {% endif %}
 
+                <!-- Objective Type -->
                 <div class="form-group">
-                    <label for="{{ form.start_time.id_for_label }}">
-                        <i class="fas fa-clock"></i> เวลาเริ่มต้น
+                    <label for="{{ form.objective_type.id_for_label }}">
+                        <i class="fas fa-bullseye"></i> ประเภทวัตถุประสงค์
                     </label>
-                    {{ form.start_time }}
-                    {% if form.start_time.errors %}
-                        <span class="field-error">{{ form.start_time.errors.0 }}</span>
+                    {{ form.objective_type }}
+                    {% if form.objective_type.errors %}
+                    <span class="field-error">{{ form.objective_type.errors.0 }}</span>
                     {% endif %}
                 </div>
 
-                <div class="form-group">
-                    <label for="{{ form.end_time.id_for_label }}">
-                        <i class="fas fa-clock"></i> เวลาสิ้นสุด
-                    </label>
-                    {{ form.end_time }}
-                    {% if form.end_time.errors %}
-                        <span class="field-error">{{ form.end_time.errors.0 }}</span>
-                    {% endif %}
+                <!-- Teaching Fields -->
+                <div id="teaching-fields" class="conditional-section" style="display:none;">
+                    <div class="section-divider">
+                        <span><i class="fas fa-chalkboard-teacher"></i> ข้อมูลการสอน</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.class_code.id_for_label }}">รหัสวิชา <span class="required">*</span></label>
+                        {{ form.class_code }}
+                        {% if form.class_code.errors %}
+                        <span class="field-error">{{ form.class_code.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.class_name.id_for_label }}">ชื่อวิชา <span class="required">*</span></label>
+                        {{ form.class_name }}
+                        {% if form.class_name.errors %}
+                        <span class="field-error">{{ form.class_name.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.curriculum.id_for_label }}">หลักสูตร <span class="required">*</span></label>
+                        {{ form.curriculum }}
+                        {% if form.curriculum.errors %}
+                        <span class="field-error">{{ form.curriculum.errors.0 }}</span>
+                        {% endif %}
+                    </div>
                 </div>
 
+                <!-- Training Fields -->
+                <div id="training-fields" class="conditional-section" style="display:none;">
+                    <div class="section-divider">
+                        <span><i class="fas fa-users"></i> ข้อมูลการอบรม</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.training_topic.id_for_label }}">หัวข้ออบรม/ติว <span
+                                class="required">*</span></label>
+                        {{ form.training_topic }}
+                        {% if form.training_topic.errors %}
+                        <span class="field-error">{{ form.training_topic.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Date & Time -->
+                <div class="section-divider">
+                    <span><i class="fas fa-clock"></i> วันและเวลา</span>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.start_date.id_for_label }}">วันที่จอง <span class="required">*</span></label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                    <span class="field-error">{{ form.start_date.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.start_time_only.id_for_label }}">เวลาเริ่มต้น <span class="required">*</span></label>
+                        {{ form.start_time_only }}
+                        {% if form.start_time_only.errors %}
+                        <span class="field-error">{{ form.start_time_only.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.end_time_only.id_for_label }}">เวลาสิ้นสุด <span class="required">*</span></label>
+                        {{ form.end_time_only }}
+                        {% if form.end_time_only.errors %}
+                        <span class="field-error">{{ form.end_time_only.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recurring Toggle -->
+                <div class="form-group recurring-toggle-group">
+                    <label class="checkbox-label">
+                        {{ form.is_recurring }}
+                        <span>จองแบบรายสัปดาห์</span>
+                    </label>
+                </div>
+
+                <!-- Recurring Details Section -->
+                <div id="recurring-fields" class="conditional-section" style="display:none;">
+                    <div class="section-divider">
+                        <span><i class="fas fa-calendar-alt"></i> ตั้งค่าการจองรายสัปดาห์</span>
+                    </div>
+                    <div class="form-group">
+                        <label>วันที่ต้องการจอง <span class="required">*</span></label>
+                        <div class="days-checkbox-group">
+                            {% for choice in form.days_of_week %}
+                            <label class="day-label">
+                                {{ choice.tag }}
+                                <span>{{ choice.choice_label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.days_of_week.errors %}
+                        <span class="field-error">{{ form.days_of_week.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.recurring_end_date.id_for_label }}">
+                            วันสิ้นสุดการจอง <span class="required">*</span>
+                        </label>
+                        {{ form.recurring_end_date }}
+                        {% if form.recurring_end_date.errors %}
+                        <span class="field-error">{{ form.recurring_end_date.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="hint-text">
+                        <i class="fas fa-info-circle"></i>
+                        ระบบจะสร้างคำขอจองสำหรับทุกวันที่เลือก ตั้งแต่วันที่เริ่มต้นจนถึงวันสิ้นสุด
+                    </p>
+                </div>
+
+                <!-- Purpose -->
                 <div class="form-group">
                     <label for="{{ form.purpose.id_for_label }}">
-                        <i class="fas fa-pen"></i> วัตถุประสงค์การใช้
+                        <i class="fas fa-pen"></i> รายละเอียดเพิ่มเติม <span class="required">*</span>
                     </label>
                     {{ form.purpose }}
                     {% if form.purpose.errors %}
-                        <span class="field-error">{{ form.purpose.errors.0 }}</span>
+                    <span class="field-error">{{ form.purpose.errors.0 }}</span>
                     {% endif %}
                 </div>
 
@@ -82,134 +187,275 @@
 </div>
 
 <style>
-.booking-form-container {
-    padding: 20px 0;
-}
-
-.back-link {
-    margin-bottom: 20px;
-}
-
-.back-link a {
-    color: #3b82f6;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.booking-grid {
-    display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 30px;
-}
-
-.room-summary-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    height: fit-content;
-}
-
-.summary-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
-.summary-placeholder {
-    width: 100%;
-    height: 200px;
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 50px;
-    color: #ccc;
-}
-
-.summary-details {
-    padding: 25px;
-}
-
-.summary-details h2 {
-    font-size: 22px;
-    margin-bottom: 10px;
-    color: #1a1a2e;
-}
-
-.summary-details p {
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.summary-details hr {
-    margin: 20px 0;
-    border: none;
-    border-top: 1px solid #eee;
-}
-
-.summary-desc {
-    font-size: 14px;
-    line-height: 1.6;
-    color: #777 !important;
-}
-
-.booking-card {
-    background: white;
-    border-radius: 16px;
-    padding: 35px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-.booking-card h2 {
-    font-size: 20px;
-    margin-bottom: 25px;
-    color: #1a1a2e;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.form-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 15px;
-    font-family: 'Noto Sans Thai', sans-serif;
-    transition: all 0.3s ease;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.field-error {
-    color: #ef4444;
-    font-size: 12px;
-    margin-top: 5px;
-    display: block;
-}
-
-.btn-block {
-    width: 100%;
-    justify-content: center;
-    padding: 14px;
-    font-size: 16px;
-}
-
-@media (max-width: 992px) {
-    .booking-grid {
-        grid-template-columns: 1fr;
+    .booking-form-container {
+        padding: 20px 0;
     }
-}
+
+    .back-link {
+        margin-bottom: 20px;
+    }
+
+    .back-link a {
+        color: #3b82f6;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .booking-grid {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 30px;
+    }
+
+    .room-summary-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        height: fit-content;
+    }
+
+    .summary-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .summary-placeholder {
+        width: 100%;
+        height: 200px;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 50px;
+        color: #ccc;
+    }
+
+    .summary-details {
+        padding: 25px;
+    }
+
+    .summary-details h2 {
+        font-size: 22px;
+        margin-bottom: 10px;
+        color: #1a1a2e;
+    }
+
+    .summary-details p {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .summary-details hr {
+        margin: 20px 0;
+        border: none;
+        border-top: 1px solid #eee;
+    }
+
+    .summary-desc {
+        font-size: 14px;
+        line-height: 1.6;
+        color: #777 !important;
+    }
+
+    .booking-card {
+        background: white;
+        border-radius: 16px;
+        padding: 35px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .booking-card h2 {
+        font-size: 20px;
+        margin-bottom: 25px;
+        color: #1a1a2e;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        font-family: 'Noto Sans Thai', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .field-error {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .btn-block {
+        width: 100%;
+        justify-content: center;
+        padding: 14px;
+        font-size: 16px;
+    }
+
+    @media (max-width: 992px) {
+        .booking-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
+
+<style>
+    .section-divider {
+        display: flex;
+        align-items: center;
+        margin: 20px 0 15px;
+        gap: 10px;
+        color: #555;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e0e0e0;
+    }
+
+    .conditional-section {
+        background: #f8faff;
+        border: 1px solid #dbeafe;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 10px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .required {
+        color: #ef4444;
+    }
+
+    .recurring-toggle-group {
+        margin-top: 8px;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #1a1a2e;
+        font-size: 15px;
+        line-height: 1;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        flex-shrink: 0;
+        cursor: pointer;
+        accent-color: #3b82f6;
+        vertical-align: middle;
+    }
+
+    .checkbox-label span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .days-checkbox-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+
+    .day-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0f4ff;
+        border: 2px solid #c7d2fe;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .day-label:has(input:checked) {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: white;
+    }
+
+    .day-label input[type="checkbox"] {
+        display: none;
+    }
+
+    .hint-text {
+        font-size: 13px;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+    }
+</style>
+
+<script>
+    (function () {
+        // Objective type toggle
+        const select = document.getElementById('id_objective_type');
+        const teachingFields = document.getElementById('teaching-fields');
+        const trainingFields = document.getElementById('training-fields');
+
+        function toggleObjective() {
+            const val = select.value;
+            teachingFields.style.display = val === 'TEACHING' ? 'block' : 'none';
+            trainingFields.style.display = val === 'TRAINING' ? 'block' : 'none';
+        }
+        select.addEventListener('change', toggleObjective);
+        toggleObjective();
+
+        // Recurring toggle
+        const recurringCheckbox = document.getElementById('id_is_recurring');
+        const recurringSection = document.getElementById('recurring-fields');
+
+        function toggleRecurring() {
+            recurringSection.style.display = recurringCheckbox.checked ? 'block' : 'none';
+        }
+        recurringCheckbox.addEventListener('change', toggleRecurring);
+        toggleRecurring();
+    }());
+</script>
 {% endblock %}
