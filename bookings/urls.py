@@ -15,4 +15,7 @@ urlpatterns = [
     path('manage-rooms/add/', views.add_room, name='add_room'),
     path('manage-rooms/<int:room_id>/edit/', views.edit_room, name='edit_room'),
     path('manage-rooms/<int:room_id>/delete/', views.delete_room, name='delete_room'),
+
+    # User cancel
+    path('my-bookings/<int:booking_id>/cancel/', views.cancel_booking, name='cancel_booking'),
 ]
