@@ -18,6 +18,7 @@
                     <th>วัตถุประสงค์</th>
                     <th>สถานะ</th>
                     <th>สร้างเมื่อ</th>
+                    <th>จัดการ</th>
                 </tr>
             </thead>
             <tbody>
@@ -46,10 +47,20 @@
                         {% endif %}
                     </td>
                     <td class="td-created">{{ booking.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if booking.status == 'Pending' or booking.status == 'Approved' %}
+                        <button class="btn-cancel"
+                                onclick="confirmCancel('{{ booking.id }}', '{{ booking.room.name }}', '{{ booking.start_time|date:'d/m/Y H:i' }}')">
+                            <i class="fas fa-times-circle"></i> ยกเลิก
+                        </button>
+                        {% else %}
+                        <span class="no-action">—</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="empty-row">
+                    <td colspan="6" class="empty-row">
                         <i class="fas fa-calendar-times"></i>
                         <p>คุณยังไม่มีประวัติการจองห้องประชุม</p>
                         <a href="{% url 'bookings:room_list' %}" class="btn btn-primary btn-sm">เริ่มจองห้องเลย</a>
@@ -180,5 +191,147 @@
     padding: 8px 16px;
     font-size: 13px;
 }
+
+.btn-cancel {
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #fca5a5;
+}
+
+.no-action {
+    color: #cbd5e1;
+    font-size: 16px;
+}
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+.modal-icon {
+    font-size: 40px;
+    color: #ef4444;
+    margin-bottom: 16px;
+}
+
+.modal-box h3 {
+    font-size: 20px;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+}
+
+.modal-box p {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-modal-cancel {
+    padding: 10px 24px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-modal-cancel:hover {
+    background: #f8fafc;
+}
+
+.btn-modal-confirm {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 10px;
+    background: #ef4444;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-modal-confirm:hover {
+    background: #dc2626;
+}
 </style>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal-overlay" id="cancelModal">
+    <div class="modal-box">
+        <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3>ยืนยันการยกเลิก</h3>
+        <p id="modal-desc"></p>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="closeModal()">ไม่ยกเลิก</button>
+            <form id="cancelForm" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn-modal-confirm">ยืนยันยกเลิก</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmCancel(bookingId, roomName, dateTime) {
+    document.getElementById('modal-desc').textContent =
+        'คุณต้องการยกเลิกการจองห้อง "' + roomName + '" วันที่ ' + dateTime + ' ใช่หรือไม่?';
+    document.getElementById('cancelForm').action = '/bookings/my-bookings/' + bookingId + '/cancel/';
+    document.getElementById('cancelModal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('cancelModal').classList.remove('active');
+}
+
+document.getElementById('cancelModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
 {% endblock %}
