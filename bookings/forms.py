@@ -4,7 +4,7 @@ from datetime import datetime as dt
 
 from django import forms
 from django.utils import timezone
-from .models import Booking, Room
+from .models import Booking, Room, BlackoutPeriod
 
 DAYS_CHOICES = [
     ('0', 'จันทร์'),
@@ -100,6 +100,20 @@ class BookingForm(forms.ModelForm):
             end_time = timezone.make_aware(dt.combine(s_date, e_time))
             cleaned_data['end_time'] = end_time
 
+        # Blackout period check
+        if s_date:
+            blackout = BlackoutPeriod.objects.filter(
+                is_active=True,
+                start_date__lte=s_date,
+                end_date__gte=s_date,
+            ).first()
+            if blackout:
+                raise forms.ValidationError(
+                    f"ไม่สามารถจองได้ วันที่ {s_date.strftime('%d/%m/%Y')} "
+                    f"อยู่ในช่วงปิดการจอง: {blackout.reason} "
+                    f"({blackout.start_date.strftime('%d/%m/%Y')} – {blackout.end_date.strftime('%d/%m/%Y')})"
+                )
+
         if start_time and end_time:
             if start_time >= end_time:
                 raise forms.ValidationError("เวลาเริ่มต้นต้องมาก่อนเวลาสิ้นสุด")
@@ -158,3 +172,26 @@ class RoomForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
         }
+
+
+class BlackoutPeriodForm(forms.ModelForm):
+    class Meta:
+        model = BlackoutPeriod
+        fields = ['start_date', 'end_date', 'reason', 'is_active']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+            'reason': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'เช่น วันหยุดนักขัตฤกษ์, ปิดปรับปรุงอาคาร',
+            }),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        if start_date and end_date and end_date < start_date:
+            raise forms.ValidationError("วันสิ้นสุดต้องอยู่หลังหรือตรงกับวันเริ่มต้น")
+        return cleaned_data

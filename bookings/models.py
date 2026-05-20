@@ -102,3 +102,23 @@ class Booking(models.Model):
     class Meta:
         verbose_name = "การจอง"
         verbose_name_plural = "การจอง"
+
+
+class BlackoutPeriod(models.Model):
+    start_date = models.DateField(verbose_name="วันเริ่มต้น")
+    end_date = models.DateField(verbose_name="วันสิ้นสุด")
+    reason = models.CharField(max_length=255, verbose_name="เหตุผล")
+    is_active = models.BooleanField(default=True, verbose_name="เปิดใช้งาน")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.reason} ({self.start_date} – {self.end_date})"
+
+    def clean(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError("วันสิ้นสุดต้องอยู่หลังวันเริ่มต้น")
+
+    class Meta:
+        verbose_name = "ช่วงปิดการจอง"
+        verbose_name_plural = "ช่วงปิดการจอง"
+        ordering = ['-start_date']

@@ -1,18 +1,35 @@
 # bookings/views.py
 
-from datetime import timedelta
+import calendar as cal_module
+from datetime import timedelta, date
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Room, Booking
-from .forms import BookingForm, RoomForm
+from django.utils import timezone
+from .models import Room, Booking, BlackoutPeriod
+from .forms import BookingForm, RoomForm, BlackoutPeriodForm
 
 @login_required
 def room_list(request):
     """รายการห้องประชุมทั้งหมด"""
     rooms = Room.objects.filter(is_active=True)
-    return render(request, 'bookings/room_list.html', {'rooms': rooms})
+    context = {'rooms': rooms}
+
+    date_str = request.GET.get('date')
+    if date_str:
+        try:
+            selected = date.fromisoformat(date_str)
+            THAI_MONTHS_SHORT = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+                                  'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+            context['selected_date'] = date_str
+            context['selected_date_display'] = (
+                f"{selected.day} {THAI_MONTHS_SHORT[selected.month]} {selected.year}"
+            )
+        except ValueError:
+            pass
+
+    return render(request, 'bookings/room_list.html', context)
 
 @login_required
 def book_room(request, room_id):
@@ -48,6 +65,24 @@ def book_room(request, room_id):
 
                 if not occurrences:
                     messages.error(request, 'ไม่พบวันที่ตรงกับวันที่เลือกในช่วงเวลาที่กำหนด')
+                    return render(request, 'bookings/book_room.html', {'form': form, 'room': room})
+
+                # Check blackout periods across every occurrence
+                blackout_dates = []
+                for occ_start, occ_end in occurrences:
+                    occ_date = occ_start.date()
+                    if BlackoutPeriod.objects.filter(
+                        is_active=True,
+                        start_date__lte=occ_date,
+                        end_date__gte=occ_date,
+                    ).exists():
+                        blackout_dates.append(occ_start.strftime('%d/%m/%Y'))
+
+                if blackout_dates:
+                    messages.error(
+                        request,
+                        'พบวันที่อยู่ในช่วงปิดการจอง: ' + ', '.join(blackout_dates),
+                    )
                     return render(request, 'bookings/book_room.html', {'form': form, 'room': room})
 
                 # Check conflicts across every occurrence
@@ -96,8 +131,16 @@ def book_room(request, room_id):
 
             return redirect('accounts:dashboard')
     else:
-        form = BookingForm(room=room)
-        
+        initial = {}
+        date_str = request.GET.get('date')
+        if date_str:
+            try:
+                date.fromisoformat(date_str)
+                initial['start_date'] = date_str
+            except ValueError:
+                pass
+        form = BookingForm(room=room, initial=initial)
+
     return render(request, 'bookings/book_room.html', {
         'form': form,
         'room': room
@@ -108,6 +151,124 @@ def my_bookings(request):
     """รายการจองของผู้ใช้ปัจจุบัน"""
     bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'bookings/my_bookings.html', {'bookings': bookings})
+
+@login_required
+def calendar_view(request):
+    """ปฏิทินการจองห้องประชุม (รายเดือน/รายสัปดาห์)"""
+    THAI_MONTHS = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+    THAI_MONTHS_SHORT = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+    THAI_DAYS_SHORT = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']  # Mon=0..Sun=6
+
+    today = timezone.now().date()
+    view_type = request.GET.get('view', 'month')
+
+    if view_type == 'week':
+        week_start_str = request.GET.get('week_start')
+        if week_start_str:
+            try:
+                week_start = date.fromisoformat(week_start_str)
+            except ValueError:
+                week_start = today - timedelta(days=today.weekday())
+        else:
+            week_start = today - timedelta(days=today.weekday())
+        week_end = week_start + timedelta(days=6)
+
+        bookings = Booking.objects.filter(
+            status__in=['Pending', 'Approved'],
+            start_time__date__gte=week_start,
+            start_time__date__lte=week_end,
+        ).select_related('room', 'user').order_by('start_time')
+
+        bookings_by_date = {}
+        for b in bookings:
+            d = b.start_time.date()
+            bookings_by_date.setdefault(d, []).append(b)
+
+        week_days = []
+        for i in range(7):
+            d = week_start + timedelta(days=i)
+            week_days.append({
+                'date': d,
+                'thai_day': THAI_DAYS_SHORT[d.weekday()],
+                'thai_month': THAI_MONTHS_SHORT[d.month],
+                'bookings': bookings_by_date.get(d, []),
+                'is_today': d == today,
+            })
+
+        if week_start.month == week_end.month:
+            week_title = f"{week_start.day} - {week_end.day} {THAI_MONTHS[week_start.month]} {week_end.year}"
+        else:
+            week_title = (f"{week_start.day} {THAI_MONTHS_SHORT[week_start.month]} "
+                          f"- {week_end.day} {THAI_MONTHS_SHORT[week_end.month]} {week_end.year}")
+
+        context = {
+            'view_type': 'week',
+            'week_days': week_days,
+            'week_start': week_start,
+            'week_end': week_end,
+            'week_title': week_title,
+            'prev_week': (week_start - timedelta(days=7)).isoformat(),
+            'next_week': (week_start + timedelta(days=7)).isoformat(),
+            'today': today,
+            'THAI_MONTHS': THAI_MONTHS,
+        }
+    else:
+        year = int(request.GET.get('year', today.year))
+        month = int(request.GET.get('month', today.month))
+
+        bookings = Booking.objects.filter(
+            status__in=['Pending', 'Approved'],
+            start_time__year=year,
+            start_time__month=month,
+        ).select_related('room', 'user').order_by('start_time')
+
+        bookings_by_date = {}
+        for b in bookings:
+            d = b.start_time.date()
+            bookings_by_date.setdefault(d, []).append(b)
+
+        raw_weeks = cal_module.monthcalendar(year, month)
+        weeks = []
+        for week in raw_weeks:
+            week_days = []
+            for day in week:
+                if day == 0:
+                    week_days.append(None)
+                else:
+                    d = date(year, month, day)
+                    week_days.append({
+                        'date': d,
+                        'day': day,
+                        'bookings': bookings_by_date.get(d, []),
+                        'is_today': d == today,
+                    })
+            weeks.append(week_days)
+
+        prev_month = month - 1 if month > 1 else 12
+        prev_year = year if month > 1 else year - 1
+        next_month = month + 1 if month < 12 else 1
+        next_year = year if month < 12 else year + 1
+
+        this_week_start = (today - timedelta(days=today.weekday())).isoformat()
+
+        context = {
+            'view_type': 'month',
+            'weeks': weeks,
+            'year': year,
+            'month': month,
+            'month_name': THAI_MONTHS[month],
+            'prev_month': prev_month,
+            'prev_year': prev_year,
+            'next_month': next_month,
+            'next_year': next_year,
+            'today': today,
+            'this_week_start': this_week_start,
+        }
+
+    return render(request, 'bookings/calendar.html', context)
+
 
 @login_required
 def cancel_booking(request, booking_id):
@@ -199,3 +360,45 @@ def delete_room(request, room_id):
     room.save()
     messages.success(request, f'ระงับการใช้งานห้อง {room.name} เรียบร้อยแล้ว')
     return redirect('bookings:manage_rooms')
+
+
+@admin_required
+def manage_blackout(request):
+    periods = BlackoutPeriod.objects.all()
+    return render(request, 'bookings/manage_blackout.html', {'periods': periods})
+
+
+@admin_required
+def add_blackout(request):
+    if request.method == 'POST':
+        form = BlackoutPeriodForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'เพิ่มช่วงปิดการจองเรียบร้อยแล้ว')
+            return redirect('bookings:manage_blackout')
+    else:
+        form = BlackoutPeriodForm()
+    return render(request, 'bookings/blackout_form.html', {'form': form, 'action': 'เพิ่มช่วงปิดการจอง'})
+
+
+@admin_required
+def edit_blackout(request, period_id):
+    period = get_object_or_404(BlackoutPeriod, id=period_id)
+    if request.method == 'POST':
+        form = BlackoutPeriodForm(request.POST, instance=period)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'แก้ไขช่วงปิดการจองเรียบร้อยแล้ว')
+            return redirect('bookings:manage_blackout')
+    else:
+        form = BlackoutPeriodForm(instance=period)
+    return render(request, 'bookings/blackout_form.html', {'form': form, 'action': 'แก้ไขช่วงปิดการจอง', 'period': period})
+
+
+@admin_required
+def delete_blackout(request, period_id):
+    period = get_object_or_404(BlackoutPeriod, id=period_id)
+    if request.method == 'POST':
+        period.delete()
+        messages.success(request, 'ลบช่วงปิดการจองเรียบร้อยแล้ว')
+    return redirect('bookings:manage_blackout')
