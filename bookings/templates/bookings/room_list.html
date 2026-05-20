@@ -10,6 +10,16 @@
         <p>เลือกห้องที่ต้องการจองเพื่อดูรายละเอียดและตารางเวลา</p>
     </div>
 
+    {% if selected_date %}
+    <div class="date-banner">
+        <i class="fas fa-calendar-check"></i>
+        จองสำหรับวันที่: <strong>{{ selected_date_display }}</strong>
+        <a href="{% url 'bookings:room_list' %}" class="date-clear">
+            <i class="fas fa-times"></i> ล้างวันที่
+        </a>
+    </div>
+    {% endif %}
+
     <div class="room-grid">
         {% for room in rooms %}
         <div class="room-card">
@@ -30,7 +40,7 @@
                 <p class="room-location"><i class="fas fa-map-marker-alt"></i> {{ room.location }}</p>
                 <p class="room-description">{{ room.description|truncatewords:20 }}</p>
                 <div class="room-actions">
-                    <a href="{% url 'bookings:book_room' room.id %}" class="btn btn-primary">
+                    <a href="{% url 'bookings:book_room' room.id %}{% if selected_date %}?date={{ selected_date }}{% endif %}" class="btn btn-primary">
                         <i class="fas fa-calendar-plus"></i> จองห้องนี้
                     </a>
                 </div>
@@ -166,5 +176,37 @@
     font-size: 40px;
     margin-bottom: 15px;
 }
+
+.date-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    font-size: 15px;
+    color: #1e40af;
+}
+
+.date-banner i { color: #3b82f6; }
+
+.date-clear {
+    margin-left: auto;
+    color: #64748b;
+    font-size: 13px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    transition: background 0.2s;
+}
+
+.date-clear:hover { background: #f1f5f9; }
 </style>
 {% endblock %}
