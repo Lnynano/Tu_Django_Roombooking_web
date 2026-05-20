@@ -7,6 +7,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Room, Booking, BlackoutPeriod
 from .forms import BookingForm, RoomForm, BlackoutPeriodForm
 
@@ -295,14 +297,48 @@ def admin_approve_list(request):
 def approve_booking(request, booking_id, action):
     """Action สำหรับอนุมัติหรือปฏิเสธการจอง"""
     booking = get_object_or_404(Booking, id=booking_id)
+    
+    details = (
+        f"รายละเอียด:\n"
+        f"ห้อง: {booking.room.name if booking.room else 'N/A'}\n"
+        f"วันที่: {timezone.localtime(booking.start_time).strftime('%d/%m/%Y') if booking.start_time else 'N/A'}\n"
+        f"เวลา: {timezone.localtime(booking.start_time).strftime('%H:%M')} - {timezone.localtime(booking.end_time).strftime('%H:%M')}\n"
+        f"วัตถุประสงค์: {booking.get_objective_type_display()}\n"
+        f"เพิ่มเติม: {booking.purpose}"
+    )
+
     if action == 'approve':
         booking.status = 'Approved'
         messages.success(request, f'อนุมัติการจองห้อง {booking.room.name} แล้ว')
+        
+        subject = "การจองของคุณได้รับการอนุมัติ"
+        message = f"{details}"
+        
+        if booking.user.email:
+            send_mail(
+                subject,
+                message,
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@tu.ac.th'),
+                [booking.user.email],
+                fail_silently=True,
+            )
+            
     elif action == 'reject':
         booking.status = 'Rejected'
         messages.warning(request, f'ปฏิเสธการจองห้อง {booking.room.name} แล้ว')
+        
+        subject = "การจองห้องเรียนถูกยกเลิก"
+        message = f"{details}\n\nหากคุณทราบว่าสิ่งนี้เป็นข้อผิดพลากโปรดติดต่อเจ้าหน้าที่"
+        
+        if booking.user.email:
+            send_mail(
+                subject,
+                message,
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@tu.ac.th'),
+                [booking.user.email],
+                fail_silently=True,
+            )
     
-    booking.save()
     booking.save()
     return redirect('bookings:admin_approve_list')
 
