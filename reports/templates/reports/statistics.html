@@ -138,10 +138,66 @@
     .status-Approved { background-color: #2ecc71; color: white; }
     .status-Rejected { background-color: #e74c3c; color: white; }
     .status-Cancelled { background-color: #95a5a6; color: white; }
+    .objective-breakdown {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .objective-table-wrap {
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .objective-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .objective-table th {
+        padding: 10px 14px;
+        background: #f8f9fa;
+        color: #34495e;
+        font-weight: 600;
+        text-align: left;
+        border-bottom: 2px solid #ecf0f1;
+    }
+
+    .objective-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #ecf0f1;
+        vertical-align: middle;
+    }
+
+    .pct-bar-wrap {
+        background: #ecf0f1;
+        border-radius: 4px;
+        height: 10px;
+        width: 120px;
+        overflow: hidden;
+    }
+
+    .pct-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+
+    .obj-teaching { background: #3498db; }
+    .obj-training  { background: #2ecc71; }
+    .obj-general   { background: #9b59b6; }
+
     @media (max-width: 768px) {
         .charts-grid {
             grid-template-columns: 1fr;
         }
+        .objective-breakdown {
+            flex-direction: column;
+        }
+        .pct-bar-wrap { width: 80px; }
     }
 </style>
 {% endblock %}
@@ -182,6 +238,44 @@
             <h3>ภาพรวมจำนวนการจองรายปี</h3>
             <div class="chart-container" style="height: 400px;">
                 <canvas id="yearlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Objective Type Breakdown -->
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <h3>การจองแยกตามประเภทวัตถุประสงค์ (ทั้งหมด {{ total_bookings }} ครั้ง)</h3>
+            <div class="objective-breakdown">
+                <div class="chart-container" style="height: 300px; max-width: 300px; margin: 0 auto;">
+                    <canvas id="objectiveChart"></canvas>
+                </div>
+                <div class="objective-table-wrap">
+                    <table class="objective-table">
+                        <thead>
+                            <tr>
+                                <th>ประเภท</th>
+                                <th>จำนวน</th>
+                                <th>สัดส่วน</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for obj in objective_breakdown %}
+                            <tr>
+                                <td>{{ obj.label }}</td>
+                                <td><strong>{{ obj.total }}</strong> ครั้ง</td>
+                                <td>{{ obj.percentage }}%</td>
+                                <td>
+                                    <div class="pct-bar-wrap">
+                                        <div class="pct-bar obj-{{ obj.type|lower }}" style="width: {{ obj.percentage }}%;"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" style="text-align:center; color:#999;">ยังไม่มีข้อมูล</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -330,6 +424,36 @@
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
         });
         {% endif %}
+
+        // 3b. Objective Type Doughnut Chart
+        const objectiveData = {{ objective_breakdown|safe }};
+        if (objectiveData.length > 0) {
+            const objColors = { 'TEACHING': '#3498db', 'TRAINING': '#2ecc71', 'GENERAL': '#9b59b6' };
+            new Chart(document.getElementById('objectiveChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: objectiveData.map(o => o.label),
+                    datasets: [{
+                        data: objectiveData.map(o => o.total),
+                        backgroundColor: objectiveData.map(o => objColors[o.type] || '#95a5a6'),
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Noto Sans Thai' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.label}: ${ctx.parsed} ครั้ง (${objectiveData[ctx.dataIndex].percentage}%)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         // 4. Specific Date Room Chart
         {% if filter_date %}

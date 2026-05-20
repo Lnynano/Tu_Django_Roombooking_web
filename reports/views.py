@@ -110,6 +110,26 @@ class ReportStatisticsView(IsAdminMixin, View):
             sorted_rooms = sorted(room_dict.items(), key=lambda x: x[1], reverse=True)
             specific_date_room_stats = [{'room': k, 'total': v} for k, v in sorted_rooms]
 
+        # Breakdown by objective type
+        OBJECTIVE_DISPLAY = {
+            'TEACHING': 'สอนปกติ/ชดเชย/เสริม',
+            'TRAINING': 'จัดอบรม/จัดติว',
+            'GENERAL':  'ใช้งานทั่วไป',
+        }
+        total_bookings = base_qs.count()
+        obj_qs = base_qs.values('objective_type').annotate(total=Count('id')).order_by('-total')
+        objective_breakdown = []
+        for item in obj_qs:
+            obj_type = item['objective_type']
+            count = item['total']
+            pct = round(count / total_bookings * 100, 1) if total_bookings > 0 else 0
+            objective_breakdown.append({
+                'type': obj_type,
+                'label': OBJECTIVE_DISPLAY.get(obj_type, obj_type),
+                'total': count,
+                'percentage': pct,
+            })
+
         # Get list of all reservations to show in template
         all_reservations = base_qs.select_related('user', 'room').order_by('-start_time')
 
@@ -118,11 +138,14 @@ class ReportStatisticsView(IsAdminMixin, View):
             'monthly_stats': monthly_stats,
             'daily_stats': daily_stats,
             'specific_date_room_stats': specific_date_room_stats,
-            
+
+            'objective_breakdown': objective_breakdown,
+            'total_bookings': total_bookings,
+
             'filter_year': filter_year,
             'filter_month': filter_month,
             'filter_date': filter_date,
-            
+
             'all_reservations': all_reservations,
         }
 
