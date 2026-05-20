@@ -468,22 +468,94 @@ a {
     font-weight: 500;
 }
 
+/* ===== Hamburger Toggle ===== */
+.navbar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    line-height: 1;
+    transition: background 0.2s;
+    margin-left: auto;
+}
+
+.navbar-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
+    /* Navbar */
     .navbar {
-        flex-direction: column;
+        flex-wrap: wrap;
         height: auto;
-        padding: 10px 15px;
-        gap: 8px;
+        padding: 10px 16px;
+        gap: 0;
+        align-items: center;
+    }
+
+    .navbar-brand {
+        flex: 1;
+        font-size: 15px;
+        margin-right: 0;
+    }
+
+    .navbar-brand img {
+        height: 36px !important;
+    }
+
+    .navbar-toggle {
+        display: block;
     }
 
     .navbar-menu {
-        flex-wrap: wrap;
-        justify-content: center;
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        gap: 2px;
+        padding: 8px 0 4px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 8px;
     }
 
+    .navbar-menu.open {
+        display: flex;
+    }
+
+    .navbar-user {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 4px;
+        padding-bottom: 6px;
+    }
+
+    .navbar-user.open {
+        display: flex;
+    }
+
+    .nav-link {
+        width: 100%;
+        padding: 10px 12px;
+    }
+
+    .user-info {
+        padding: 8px 12px;
+    }
+
+    /* Main content */
+    .main-content {
+        padding: 16px;
+    }
+
+    /* Dashboard */
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 
     .action-grid {
@@ -492,5 +564,29 @@ a {
 
     .welcome-section h1 {
         font-size: 20px;
+    }
+
+    .stat-card {
+        padding: 14px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .stat-info h3 {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .action-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }

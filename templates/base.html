@@ -18,14 +18,17 @@
             <img src="{% static 'Logo_images/TSE_LOGO.webp' %}" alt="TSE Logo" style="height: 45px; margin-right: 12px; filter: drop-shadow(1px 1px 0 white) drop-shadow(-1px -1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white);">
             <span>ระบบจองห้อง </span>
         </div>
-        <div class="navbar-menu">
+        <button class="navbar-toggle" id="navToggle" aria-label="เมนู">
+            <i class="fas fa-bars" id="navToggleIcon"></i>
+        </button>
+        <div class="navbar-menu" id="navMenu">
             <a href="{% url 'accounts:dashboard' %}" class="nav-link">
                 <i class="fas fa-home"></i> หน้าหลัก
             </a>
             <a href="{% url 'bookings:room_list' %}" class="nav-link">
                 <i class="fas fa-calendar-plus"></i> จองห้อง
             </a>
-            <a href="#" class="nav-link">
+            <a href="{% url 'bookings:calendar' %}" class="nav-link">
                 <i class="fas fa-calendar-alt"></i> ปฏิทิน
             </a>
             <a href="{% url 'bookings:my_bookings' %}" class="nav-link">
@@ -41,12 +44,15 @@
             <a href="{% url 'bookings:manage_rooms' %}" class="nav-link">
                 <i class="fas fa-door-open"></i> จัดการห้อง
             </a>
+            <a href="{% url 'bookings:manage_blackout' %}" class="nav-link">
+                <i class="fas fa-ban"></i> ปิดการจอง
+            </a>
             <a href="{% url 'send_email_page' %}" class="nav-link">
                 <i class="fas fa-envelope"></i> ส่งอีเมล
             </a>
             {% endif %}
         </div>
-        <div class="navbar-user">
+        <div class="navbar-user" id="navUser">
             <span class="user-info">
                 <i class="fas fa-user-circle"></i>
                 {{ user.first_name }} ({{ user.get_role_display }})
@@ -76,5 +82,18 @@
     </main>
 
     {% block extra_js %}{% endblock %}
+    <script>
+    (function () {
+        var toggle = document.getElementById('navToggle');
+        if (!toggle) return;
+        toggle.addEventListener('click', function () {
+            document.getElementById('navMenu').classList.toggle('open');
+            document.getElementById('navUser').classList.toggle('open');
+            var icon = document.getElementById('navToggleIcon');
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
+        });
+    }());
+    </script>
 </body>
 </html>
