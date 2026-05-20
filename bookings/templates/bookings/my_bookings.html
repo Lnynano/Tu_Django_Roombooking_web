@@ -192,6 +192,74 @@
     font-size: 13px;
 }
 
+@media (max-width: 700px) {
+    .bookings-table-container {
+        border-radius: 12px;
+    }
+
+    .bookings-table thead {
+        display: none;
+    }
+
+    .bookings-table,
+    .bookings-table tbody,
+    .bookings-table tr,
+    .bookings-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .bookings-table tr {
+        border-bottom: none !important;
+        margin-bottom: 12px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .bookings-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        border-bottom: 1px solid #f1f5f9 !important;
+        font-size: 14px;
+        gap: 8px;
+    }
+
+    .bookings-table td:last-child {
+        border-bottom: none !important;
+    }
+
+    .bookings-table td::before {
+        content: attr(data-label);
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        flex-shrink: 0;
+    }
+
+    .td-room {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .td-room::before { content: "ห้อง"; }
+    .bookings-table td:nth-child(2)::before { content: "วันเวลา"; }
+    .bookings-table td:nth-child(3)::before { content: "วัตถุประสงค์"; }
+    .bookings-table td:nth-child(4)::before { content: "สถานะ"; }
+    .bookings-table td:nth-child(5)::before { content: "สร้างเมื่อ"; }
+    .bookings-table td:nth-child(6)::before { content: ""; }
+
+    .td-room strong { font-size: 15px; }
+
+    .bookings-table-container {
+        background: transparent;
+        box-shadow: none;
+    }
+}
+
 .btn-cancel {
     background: #fee2e2;
     color: #991b1b;
