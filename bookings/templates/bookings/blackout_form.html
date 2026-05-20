@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if period %}แก้ไขช่วงปิดการจอง{% else %}เพิ่มช่วงปิดการจอง{% endif %} — ระบบจองห้องประชุม{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1>
+                <i class="fas fa-ban"></i>
+                {% if period %}แก้ไขช่วงปิดการจอง{% else %}เพิ่มช่วงปิดการจอง{% endif %}
+            </h1>
+            <a href="{% url 'bookings:manage_blackout' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> กลับ
+            </a>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="form-errors">
+            {% for error in form.non_field_errors %}
+            <p><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="field-group">
+                <label class="field-label">เหตุผล / ชื่อช่วงปิดการจอง <span class="required">*</span></label>
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                <p class="field-error">{{ form.reason.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="field-row">
+                <div class="field-group">
+                    <label class="field-label">วันเริ่มต้น <span class="required">*</span></label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                    <p class="field-error">{{ form.start_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div class="field-group">
+                    <label class="field-label">วันสิ้นสุด <span class="required">*</span></label>
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}
+                    <p class="field-error">{{ form.end_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="toggle-label">
+                    {{ form.is_active }}
+                    <span>เปิดใช้งาน</span>
+                </label>
+                <p class="field-hint">เมื่อเปิดใช้งาน ผู้ใช้จะไม่สามารถจองห้องในช่วงวันเวลานี้ได้</p>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'bookings:manage_blackout' %}" class="btn-cancel">ยกเลิก</a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i>
+                    {% if period %}บันทึกการแก้ไข{% else %}เพิ่มช่วงปิดการจอง{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-container {
+    max-width: 680px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.form-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.form-header h1 {
+    font-size: 22px;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-header h1 i { color: #ef4444; }
+
+.btn-back {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.btn-back:hover { background: #e2e8f0; }
+
+.form-errors {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    color: #991b1b;
+    font-size: 14px;
+}
+
+.form-errors p { margin: 0; display: flex; align-items: center; gap: 8px; }
+
+.field-group {
+    margin-bottom: 20px;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.required { color: #ef4444; }
+
+.field-group .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    color: #1e293b;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.field-group .form-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.field-error {
+    color: #ef4444;
+    font-size: 12px;
+    margin: 4px 0 0 0;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.toggle-label .form-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+    cursor: pointer;
+}
+
+.field-hint {
+    color: #94a3b8;
+    font-size: 12px;
+    margin: 6px 0 0 28px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #475569;
+    background: #f1f5f9;
+    transition: background 0.2s;
+}
+
+.btn-cancel:hover { background: #e2e8f0; }
+
+.btn-submit {
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    background: #6366f1;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-submit:hover { background: #4f46e5; }
+
+@media (max-width: 500px) {
+    .field-row { grid-template-columns: 1fr; }
+    .form-card { padding: 20px 16px; }
+}
+</style>
+{% endblock %}

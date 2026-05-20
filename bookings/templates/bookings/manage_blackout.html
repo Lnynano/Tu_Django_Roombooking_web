@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}จัดการช่วงปิดการจอง — ระบบจองห้องประชุม{% endblock %}
+
+{% block content %}
+<div class="blackout-container">
+    <div class="page-header-row">
+        <div>
+            <h1><i class="fas fa-ban"></i> ช่วงปิดการจอง</h1>
+            <p>กำหนดช่วงเวลาที่ไม่อนุญาตให้ผู้ใช้ทำการจองห้อง</p>
+        </div>
+        <a href="{% url 'bookings:add_blackout' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> เพิ่มช่วงปิดการจอง
+        </a>
+    </div>
+
+    <div class="blackout-table-card">
+        <table class="blackout-table">
+            <thead>
+                <tr>
+                    <th>เหตุผล</th>
+                    <th>วันเริ่มต้น</th>
+                    <th>วันสิ้นสุด</th>
+                    <th>จำนวนวัน</th>
+                    <th>สถานะ</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for period in periods %}
+                <tr class="{% if not period.is_active %}row-inactive{% endif %}">
+                    <td class="td-reason">
+                        <i class="fas fa-ban text-muted"></i> {{ period.reason }}
+                    </td>
+                    <td>{{ period.start_date|date:"d/m/Y" }}</td>
+                    <td>{{ period.end_date|date:"d/m/Y" }}</td>
+                    <td>
+                        {% with days=period.end_date|timeuntil:period.start_date %}
+                            {{ period.end_date|date:"j" }}
+                        {% endwith %}
+                        —
+                    </td>
+                    <td>
+                        {% if period.is_active %}
+                            <span class="badge-active">เปิดใช้งาน</span>
+                        {% else %}
+                            <span class="badge-inactive">ปิดใช้งาน</span>
+                        {% endif %}
+                    </td>
+                    <td class="td-actions">
+                        <a href="{% url 'bookings:edit_blackout' period.id %}" class="btn-edit">
+                            <i class="fas fa-edit"></i> แก้ไข
+                        </a>
+                        <form method="POST" action="{% url 'bookings:delete_blackout' period.id %}"
+                              onsubmit="return confirm('ลบช่วงปิดการจองนี้ใช่หรือไม่?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-del">
+                                <i class="fas fa-trash"></i> ลบ
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty-row">
+                        <i class="fas fa-calendar-check"></i>
+                        <p>ยังไม่มีช่วงปิดการจอง</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.blackout-container { padding: 20px 0; }
+
+.page-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.page-header-row h1 {
+    font-size: 26px;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-header-row p { color: #666; margin-top: 4px; font-size: 14px; }
+
+.blackout-table-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.blackout-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+
+.blackout-table th {
+    background: #f8fafc;
+    padding: 16px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.blackout-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    vertical-align: middle;
+}
+
+.row-inactive td { color: #94a3b8; }
+
+.td-reason { font-weight: 500; }
+
+.text-muted { color: #ef4444; margin-right: 6px; }
+
+.badge-active {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-inactive {
+    background: #f1f5f9;
+    color: #94a3b8;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.td-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-edit {
+    background: #dbeafe;
+    color: #1e40af;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-edit:hover { background: #bfdbfe; }
+
+.btn-del {
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-del:hover { background: #fca5a5; }
+
+.empty-row {
+    text-align: center;
+    padding: 60px 20px !important;
+    color: #94a3b8;
+}
+
+.empty-row i { font-size: 36px; display: block; margin-bottom: 12px; }
+.empty-row p { margin: 0; }
+</style>
+{% endblock %}
