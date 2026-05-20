@@ -158,6 +158,31 @@ class ExportStatisticsCSVView(IsAdminMixin, View):
         response.write(u'\ufeff'.encode('utf8')) # BOM for Excel
 
         writer = csv.writer(response)
+        
+        # --- 1. Breakdown by Usage Type (Objective Type) ---
+        writer.writerow(['สรุปการจองแยกตามประเภทการใช้งาน (Usage Type Breakdown)'])
+        writer.writerow(['ประเภท (Type)', 'จำนวน (Total)', 'สัดส่วน (Percentage)'])
+        
+        total_bookings = Booking.objects.count()
+        obj_qs = Booking.objects.values('objective_type').annotate(total=Count('id')).order_by('-total')
+        
+        OBJECTIVE_DISPLAY = dict(Booking.OBJECTIVE_TYPE_CHOICES)
+        
+        for item in obj_qs:
+            obj_type = item['objective_type']
+            count = item['total']
+            pct = round(count / total_bookings * 100, 1) if total_bookings > 0 else 0
+            writer.writerow([
+                OBJECTIVE_DISPLAY.get(obj_type, obj_type),
+                f"{count} ครั้ง",
+                f"{pct}%"
+            ])
+            
+        writer.writerow([]) # Empty row for spacing
+        writer.writerow([])
+        
+        # --- 2. List of All Reservation History ---
+        writer.writerow(['รายการประวัติการจองทั้งหมด (All Reservation History)'])
         writer.writerow([
             'ID', 'ผู้จอง (User)', 'ห้อง (Room)', 'เวลาเริ่มต้น (Start Time)', 'เวลาสิ้นสุด (End Time)', 
             'ประเภท (Objective)', 'รายละเอียด (Purpose)', 'สถานะ (Status)', 'สร้างเมื่อ (Created At)'

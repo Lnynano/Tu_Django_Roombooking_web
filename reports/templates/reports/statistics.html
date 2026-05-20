@@ -138,6 +138,17 @@
     .status-Approved { background-color: #2ecc71; color: white; }
     .status-Rejected { background-color: #e74c3c; color: white; }
     .status-Cancelled { background-color: #95a5a6; color: white; }
+    th.sortable {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    th.sortable:hover {
+        background-color: #e9ecef;
+    }
+    th.sortable i {
+        margin-left: 0.5rem;
+        color: #7f8c8d;
+    }
     .objective-breakdown {
         display: flex;
         align-items: center;
@@ -313,12 +324,17 @@
     <!-- Reservations Table -->
     <div class="table-section">
         <h3>รายการจองทั้งหมด</h3>
-        <table class="reservations-table">
+        <table class="reservations-table" id="reservationsTable">
             <thead>
                 <tr>
+                    <th class="sortable" onclick="sortTable(0, 'number')">
+                        รหัส <i class="fas fa-sort"></i>
+                    </th>
                     <th>ผู้จอง</th>
                     <th>ห้อง</th>
-                    <th>เริ่ม</th>
+                    <th class="sortable" onclick="sortTable(3, 'date')">
+                        เริ่ม <i class="fas fa-sort"></i>
+                    </th>
                     <th>สิ้นสุด</th>
                     <th>วัตถุประสงค์</th>
                     <th>สถานะ</th>
@@ -327,16 +343,17 @@
             <tbody>
                 {% for booking in all_reservations %}
                 <tr>
+                    <td>{{ booking.id }}</td>
                     <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
                     <td>{{ booking.room.name }}</td>
-                    <td>{{ booking.start_time|date:"d/m/Y H:i" }}</td>
+                    <td data-timestamp="{{ booking.start_time|date:'U' }}">{{ booking.start_time|date:"d/m/Y H:i" }}</td>
                     <td>{{ booking.end_time|date:"d/m/Y H:i" }}</td>
                     <td>{{ booking.get_objective_type_display }}</td>
                     <td><span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display }}</span></td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="text-align: center; color: #7f8c8d;">ไม่มีข้อมูลการจอง</td>
+                    <td colspan="7" style="text-align: center; color: #7f8c8d;">ไม่มีข้อมูลการจอง</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -478,5 +495,70 @@
         });
         {% endif %}
     });
+
+    function sortTable(columnIndex, type) {
+        const table = document.getElementById("reservationsTable");
+        let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        switching = true;
+        dir = "asc"; 
+        
+        // Reset all sort icons
+        const headers = table.querySelectorAll("th.sortable i");
+        headers.forEach(icon => icon.className = "fas fa-sort");
+        
+        const clickedHeader = table.querySelectorAll("th.sortable")[columnIndex === 0 ? 0 : 1].querySelector("i");
+
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[columnIndex];
+                y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+                
+                if (!x || !y) continue;
+                if (x.getAttribute("colspan")) continue; // Skip empty row message
+                
+                let valX, valY;
+                
+                if (type === 'number') {
+                    valX = parseInt(x.innerHTML) || 0;
+                    valY = parseInt(y.innerHTML) || 0;
+                } else if (type === 'date') {
+                    valX = parseInt(x.getAttribute("data-timestamp")) || 0;
+                    valY = parseInt(y.getAttribute("data-timestamp")) || 0;
+                }
+                
+                if (dir == "asc") {
+                    if (valX > valY) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (valX < valY) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+        
+        // Set the correct sort icon
+        if (dir === "asc") {
+            clickedHeader.className = "fas fa-sort-up";
+        } else {
+            clickedHeader.className = "fas fa-sort-down";
+        }
+    }
 </script>
 {% endblock %}
